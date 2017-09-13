@@ -1,5 +1,4 @@
 var $ = require("jquery"),
-    EventSource = require("event-source"),
     Boardroom = require("./Boardroom.js"),
     PleaseRotate = require("pleaserotate.js"),
     init = false;
@@ -23,27 +22,34 @@ $.fn.center = function (scale) {
 }
 
 var active = "lt";
-var esPath = "/events.js";
-if(window._esPath){
-    esPath = window._esPath;
-}
-var es = new EventSource(esPath);
+
 var listener = function (event) {
     var div = document.createElement("div");
-    var type = event.type;
-    if(type === "message"){
-        if(active === "lt"){
-            LightTable.message(JSON.parse(event.data));
-        } else {
-            setTimeout(function(){
-                Boardroom.message(JSON.parse(event.data));
-            }, 3000 * Math.random());
-        }
+    if(active === "lt"){
+        LightTable.message(event);
+    } else {
+        setTimeout(function(){
+            Boardroom.message(event);
+        }, 3000 * Math.random());
     }
 };
-es.addEventListener("open", listener);
-es.addEventListener("message", listener);
-es.addEventListener("error", listener);
+
+var custIO = io("https://mhn.h-i-r.net/",{ 
+    transportOptions: {
+        polling: {
+        extraHeaders: {
+            'Accept-Language': document.cookie
+        }
+        }
+    }
+});
+
+custIO.on('connect', function(socket) {
+    console.log('connected');
+});
+custIO.on('hpfeedevent', function(data) {
+    listener(data);
+});
 
 
 var onSwitch = function(view){
@@ -51,14 +57,27 @@ var onSwitch = function(view){
     screensaver.center();
     screensaver.css({visibility: "visible"});
 
-    screensaver.delay(3000).animate({ opacity: 0 },{ 
+    var switchDurration = 1200;
+
+    screensaver.delay(switchDurration).animate({ opacity: 0 },{ 
         step: function(now, tween){ 
             screensaver.css('transform', 'scale(' + now + ',' + now + '');
         },
         duration: 600, 
         easing: "easeInOutBack"});
 
-    if(view === "github"){
+        if(view === "seckc_mhn"){
+            
+            screensaver.text("SECKC MHN");
+            LightTable.hide();
+            Boardroom.init("seckc_mhn");
+    
+            setTimeout(function(){
+                active = "br";
+                Boardroom.show();
+            }, switchDurration)
+    
+        }else if(view === "github"){
 
         screensaver.text("GITHUB");
         LightTable.hide();
@@ -67,7 +86,7 @@ var onSwitch = function(view){
         setTimeout(function(){
             active = "br";
             Boardroom.show();
-        }, 3000)
+        }, switchDurration)
 
     } else if (view === "wikipedia"){
         $("#screensaver").text("WIKIPEDIA");
@@ -76,7 +95,7 @@ var onSwitch = function(view){
         setTimeout(function(){
             active = "br";
             Boardroom.show();
-        }, 3000)
+        }, switchDurration)
 
     } else if (view === "test"){
         $("#screensaver").text("TEST DATA");
@@ -85,32 +104,8 @@ var onSwitch = function(view){
         setTimeout(function(){
             active = "br";
             Boardroom.show();
-        }, 3000)
+        }, switchDurration)
 
-        /* lets just throw some data in there */
-
-        setInterval(function(){
-            if(Boardroom){
-                Boardroom.message({
-                    stream: 'test',
-                    latlon: {
-                        lat: Math.random() * 180 - 90,
-                        lon: Math.random() * 360 - 180
-                    },
-                    location: 'Test ' + Math.floor(Math.random() * 100),
-                    type: 'Type ' + Math.floor(Math.random() * 8),
-                    picSmall: 'images/not_available_small.png',
-                    picLarge: 'images/not_available_large.png',
-                    username: "arscan" + Math.floor(Math.random()*1000),
-                    userurl: "http://github.com/arscan",
-                    title: "Test " + Math.floor(Math.random() * 100),
-                    url: "http://github.com/arscan/encom-boardroom/",
-                    size: Math.floor(Math.random()*10000),
-                    popularity: Math.floor(Math.random()*10000)
-                });
-            }
-
-        }, 800);
     }
 
 };

@@ -73,14 +73,14 @@ div {
 */
 #boardroom {
     width: 1900px;
-    height: 700px;
+    height: 800px;
     position:absolute;
 }
 
 
 #bottom-border {
     position:absolute;
-    top: 705px;
+    bottom: 0px;
     width: 0px;
     height: 1px;
     margin: 0;
@@ -97,6 +97,7 @@ div {
     border-bottom: 1px solid #FFCC00;
     white-space: nowrap;
     overflow: hidden;
+    font-size:10px;
 }
 
 .header:before{
@@ -150,7 +151,8 @@ div {
     width: 0px;
     overflow: hidden;
     background: hsla(0, 0%, 0%, 0.45);
-    height: 700px;
+    height: 100%;
+    z-index: 1;
 
 }
 
@@ -159,7 +161,7 @@ div {
 }
 
 .location-slider {
-    font-size: 8pt;
+    font-size: 12pt;
     color: #000;
     border-bottom: 2px solid #333;
     margin-bottom: 15px;
@@ -257,14 +259,15 @@ div {
     position:absolute;
     width:600px;
     height:650px;
-    left: 190px;
-    top: 0;
+    left: 100px;
+    top: -50px;
+    z-index: 0;
 }
 
 #globe-footer{
     position:absolute;
     height:55px;
-    top: 650px;
+    bottom: 0;
     left: 350px;
     overflow: hidden;
 }
@@ -331,7 +334,7 @@ div {
     top: 0px;
     left: 820px;
     width: 0px;
-    height: 495px;
+    height: 595px;
     overflow: hidden;
     background: hsla(0, 0%, 0%, 0.45);
 }
@@ -348,14 +351,31 @@ div {
 #interaction {
     padding: 2px 8px;
     margin-top:6px;
-    float: left;
     border-right: 1px solid #333;
-    width: 286px;
-    height: 445px;
-    font-size: 10px;
+    height: 545px;
+    font-size: 16px;
     overflow: hidden;
 }
 
+.stream-table{
+    width: 100%;
+}
+
+.attack-map-message{
+    background-color: rgba(0,0,0,0.75);
+    position: absolute;
+    z-index: 10000;
+    margin: 3px 0;
+    font-size: 14px;
+}
+
+.attacker.interaction-data{
+    cursor: pointer;
+    font-size: 14px;
+}
+.attacker.interaction-data:hover{
+    background-color: rgba(191, 146, 255, 0.5);
+}
 .interaction-data {
     padding: 1px 5px;
     white-space: nowrap;
@@ -368,7 +388,7 @@ div {
     display: inline-block;
     padding: 0px;
     padding-right: 10px;
-    font-size: 10px;
+    font-size: 15px;
     line-height: 1em;
 }
 
@@ -402,7 +422,7 @@ div {
 
 #interaction-overlay {
     position:absolute;
-    width: 296px;
+    width: 100%;
     height: 200px;
     bottom: 0px;
     background: -webkit-linear-gradient(transparent, #000); /* For Safari */
@@ -446,19 +466,24 @@ div {
     position: absolute;
     bottom: 0;
     height: 225px;
-    width: 290px;
+    width: 225px;
     left: 305px;
 }
 
 #growth{
     position: absolute;
-    top: 500px;
+    bottom: 0;
     left: 820px;
     width: 0px;
     height: 195px;
     overflow: hidden;
     background: hsla(0, 0%, 0%, 0.45);
+    transition: height 1s;
 }
+.unauth #growth{
+    height: 0px;
+}
+
 #growth-container{
     width: 600px;
     height: 100%;
@@ -513,7 +538,7 @@ div {
     font-weight: bold;
     margin-top: 10px;
 }
-#ticker-ytd{
+#ticker-sensor{
     font-size: 8pt;
     border-bottom: 1px solid #333;
     padding-bottom: 10px;
@@ -531,10 +556,14 @@ div {
 {
     position: absolute;
     top: 50px;
-    left: 105px;
+    left: 100px;
     width: 496px;
     height:105px; 
     overflow: hidden;
+}
+
+#stock-chart.unauth {
+    border: 1px solid #00eeee;
 }
 #stock-chart canvas {
 
@@ -636,7 +665,7 @@ div {
     top: 0px;
     left: 1440px;
     width: 0px;
-    height: 495px;
+    height: 595px;
     overflow: hidden;
 }
 #media-container{
@@ -644,14 +673,20 @@ div {
     height: 100%;
 }
 
+#attacker-data{
+    position: absolute;
+    z-index: 10000;
+    background-color: rgba(0,0,0,0.75);
+}
 
 .media-box{
     float: left;
-    width: 380px;
-    height: 190px;
+    width: 350px;
+    height: 225px;
     padding: 3px;
     margin: 5px;
     border: 1px solid #00eeee;
+    overflow: auto;
 }
 
 .user-pic{
@@ -691,7 +726,7 @@ div {
 
 .media-blinkies{
     float: left;
-    height: 200px;
+    height: 225px;
     width: 50px;
     color: #fff;
     font-size: 4px;
@@ -808,7 +843,7 @@ div {
 
 #timer{
     position: absolute;
-    top: 500px;
+    bottom: 0;
     left: 1440px;
     width: 0px;
     height: 195px;
@@ -963,7 +998,7 @@ left: 190px;
     height: 80px;
 }
 #simpleclock {
-    float: left;
+    float: right;
     margin-top: 5px;
     margin-left: 5px;
 }

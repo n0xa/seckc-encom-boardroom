@@ -12,6 +12,15 @@ var webglTest,
     numUsers = 1,
     dataStreamOn = false;
 
+    window.firstTimeViewingLT = getUrlParameter('redirect') === "" ? true : false;
+
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+        var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    };
+
 /* public function */
 
 LightTable.init = function(_hideFn){
@@ -40,6 +49,15 @@ LightTable.init = function(_hideFn){
         simulateCommand("|cd github$");
         simulateCommand("ls$");
         simulateCommand("run github.exe$");
+        $(document).off();
+        $(".folder-container").off();
+    });
+
+    $("#lt-launch-mhn").click(function(){
+        $(this).find(".folder-big").css("background-color", "#fff");
+        simulateCommand("|cd seckcmhn$");
+        simulateCommand("ls$");
+        simulateCommand("run seckcmhn.exe$");
         $(document).off();
         $(".folder-container").off();
     });
@@ -79,6 +97,19 @@ LightTable.init = function(_hideFn){
     });
 
     initialized = true;
+
+    if(window.firstTimeViewingLT){
+        window.firstTimeViewingLT = false;
+        setTimeout(function(){
+            $("#lt-launch-mhn").find(".folder-big").css("background-color", "#fff");
+            simulateCommand("|cd seckcmhn$");
+            simulateCommand("ls$");
+            simulateCommand("run seckcmhn.exe$");
+            $(document).off();
+            $(".folder-container").off();
+        },1500);
+    }
+    
 };
 
 LightTable.show = function(cb){
@@ -563,7 +594,20 @@ function writeLs(exec){
 function executeCommand(){
     var command = $(".command-text").last().text();
 
-    if(command == "run github.exe"){
+    if(command == "run seckcmhn.exe"){
+        if(currentDir == "seckcmhn"){
+            $(".ls-exec").addClass("ls-highlight")
+            $(".container-border").animate({opacity: 0}, 250);
+
+            setTimeout(function(){
+                hideFn("seckc_mhn");
+            }, 250);
+        } else {
+            writeResponse("<span class='alert'>Error:</span> No such file");
+            writePrompt();
+        }
+
+    }else if(command == "run github.exe"){
         if(currentDir == "github"){
             $(".ls-exec").addClass("ls-highlight")
             $(".container-border").animate({opacity: 0}, 500);
@@ -602,6 +646,14 @@ function executeCommand(){
             writeResponse("<span class='alert'>Error:</span> No such file");
             writePrompt();
         }
+
+    } else if(command == "cd seckcmhn"){
+        $(".ls-github").addClass("ls-highlight")
+        currentDir = "seckcmhn";
+        $(".folder-label").removeClass("selected");
+        $("#lt-launch-github .folder-label").addClass("selected");
+        writeResponse("Changed directory to <span class='highlight'>seckcmhn</span>");
+        writePrompt();
 
     } else if(command == "cd github"){
         $(".ls-github").addClass("ls-highlight")

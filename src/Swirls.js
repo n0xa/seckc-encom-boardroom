@@ -7,7 +7,7 @@ var SwirlPoint = function(label, canvas){
     this.startTime = Date.now();
     this.hitCount = 1;
     this.lastTime = Date.now();
-    this.decayTime = 200;
+    this.decayTime = 600;
     this.chaseRate = .005;
 
     this.startRadians = Math.random() * Math.PI * 2;

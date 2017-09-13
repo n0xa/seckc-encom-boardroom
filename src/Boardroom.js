@@ -4,13 +4,13 @@ var $ = require("jquery"),
     LightTable = require("./LightTable.js"),
     EncomGlobe = require("encom-globe"),
     SimpleClock = require("./SimpleClock.js"),
-    Box = require("./Box.js"),
     SatBar = require("./SatBar.js"),
     TimerTrees = require("./TimerTrees.js"),
     StockChart = require("./StockChart.js"),
     StockChartSmall = require("./StockChartSmall.js"),
-    Swirls = require("./Swirls.js"),
-    Logo = require("./Logo.js");
+    Logo = require("./Logo.js"),
+    _ = require("lodash/lodash.min.js")
+    attackerMap = null;
 
 moment.tz = require("moment-timezone");
 
@@ -23,11 +23,13 @@ var boardroomActive = false,
     swirls, 
     sliderHeads, 
     slider, 
+    stockchart,
     lastTime, 
     screensaver, 
     locationAreas, 
     locationAreaColors = [], 
     interactionContainer,
+    topattacksContainer,
     logo,
     blinkies,
     blinkiesColors = ["#000", "#ffcc00", "#00eeee", "#fff"],
@@ -35,7 +37,8 @@ var boardroomActive = false,
     currentPics = [],
     lastPicDate = Date.now(),
     streamType,
-    readmeContainer;
+    readmeContainer,
+    authenticatedUser = false;
 
 sliderHeads = {};
 var Boardroom = {};
@@ -56,7 +59,7 @@ Boardroom.init = function(_streamType, data){
 
     readmeContainer = $("#boardroom-readme-" + _streamType);
 
-    Boardroom.data = data;
+    //Boardroom.data = data;
 
 
     $("#fullscreen-link").click(function(e){
@@ -80,8 +83,8 @@ Boardroom.init = function(_streamType, data){
 
     setInterval(function(){
         if(boardroomActive){
-            $("#san-francisco-time").text(moment().tz("America/Los_Angeles").format("HH:mm:ss"));
-            $("#new-york-time").text(moment().tz("America/New_York").format("HH:mm:ss"));
+            $("#las-vegas-time").text(moment().tz("America/Los_Angeles").format("HH:mm:ss"));
+            $("#kansas-city-time").text(moment().tz("America/Chicago").format("HH:mm:ss")),
             $("#london-time").text(moment().tz("Europe/London").format("HH:mm:ss"));
             $("#berlin-time").text(moment().tz("Europe/Berlin").format("HH:mm:ss"));
             $("#bangalore-time").text(moment().tz("Asia/Colombo").format("HH:mm:ss"));
@@ -103,8 +106,8 @@ Boardroom.init = function(_streamType, data){
 
     $("#user-interaction-header").text(streamType.toUpperCase() + " LIVE DATA FEED");
     $("#globalization-header").text(streamType.toUpperCase() + " GLOBALIZATION");
-    $("#growth-header").text(streamType.toUpperCase() + " HISTORIC PERFORMANCE");
-    $("#media-header").text(streamType.toUpperCase() + " USERS");
+    $("#growth-header").text(streamType.toUpperCase() + " EVENTS :: LAST 24 HOURS");
+    // $("#media-header").text(streamType.toUpperCase() + " USERS");
 
     $("#ticker-text").text(streamType.toUpperCase());
     if(streamType.length > 6){
@@ -128,15 +131,220 @@ Boardroom.init = function(_streamType, data){
         }
     }, 3000);
 
-    interactionContainer = $("#interaction > div");
+    initAuth();
+
+    interactionContainer = $("#interaction > table > tbody");
+    topattacksMessage = $("#media-top > h3");
+    topattacksContainer = $("#media-top > table > tbody");
+    attackerContainer = $("#attacker-data");
+    attackerContainerHeader = $("#media-bottom > h3");
 
     for(var i = 0; i< 50; i++){
-        interactionContainer.append('<ul class="interaction-data"></ul>');
+        interactionContainer.append('<tr class="interaction-data"></tr>');
     }
 };
 
+function initAuth(){
+    $.ajax({
+        url: "https://mhn.h-i-r.net/seckcapi" + "/auth/me",
+      })
+        .done(function( data ) {
+            authenticatedUser = data.active ? data.active : false;
+
+        });
+}
+
+function getSensors(){
+    return $.ajax({
+        url: "https://mhn.h-i-r.net/api/sensor/",
+      })
+        .done(function( data ) {
+            if(data.length && data.length > 0){
+                data.forEach(function(sensor){
+                    getSensorLocation(sensor);
+                })
+            }
+        });
+}
+
+function getSensorLocation(sensor){
+    $.ajax({
+        url: "https://mhn.h-i-r.net/seckcapi"+ "/geocode/" + sensor.ip//"https://mhn.h-i-r.net/seckcapi" + "/geocode/" + sensor.ip,
+      })
+        .done(function( data ) {
+            
+            var lat = data.location.latitude ? data.location.latitude : "0",
+                lon = data.location.longitude ? data.location.longitude : "0";
+            
+            var opts = {
+                coreColor: "#BF92FF",
+                numWaves: 4
+            }
+            
+            globe.addSatellite(lat, lon, 1.4 + Math.random()/10, opts/* opts, texture, animator*/);
+        });
+}
+
+function getTopAttackers(){
+    return $.ajax({
+        url: "https://mhn.h-i-r.net/api/top_attackers/?hours_ago=24",
+      })
+        .done(function( data ) {
+            //topattacksContainer
+            topattacksMessage.remove();
+            topattacksContainer[0].innerHTML = "";
+            data.data.forEach(function(attacker){
+                if(topattacksContainer){
+                    var lastChild = document.createElement("tr"); 
+                    lastChild.onclick = function(){
+                        getAttackerStats(attacker.source_ip);
+                    };
+                    lastChild.classList.add("interaction-data", "attacker");
+                    lastChild.innerHTML = '<td class="interaction-username">' + attacker.count + '</td>' + 
+                        '<td class="interaction-title">' + attacker.source_ip + '</td>' + 
+                        '<td class="interaction-type">' + attacker.honeypot + '</td>';
+                    topattacksContainer.append(lastChild);
+                }
+            });
+        });
+}//https://mhn.h-i-r.net/api/attacker_stats/104.192.3.34/
+function getAttackerStats(attackIP){
+    $.ajax({
+        url: "https://mhn.h-i-r.net/api/attacker_stats/" + attackIP + "/",
+      })
+        .done(function( data ) {
+            //topattacksContainer
+            attackerContainerHeader[0].setAttribute("style", "display:none;");
+            if(attackerContainer){
+                attackerContainer[0].innerHTML = "";
+                var lastChild = document.createElement("div"); 
+                lastChild.classList.add("interaction-data");
+                lastChild.innerHTML = '<ul><li class="interaction-type">' + attackIP + '</li></ul>' + 
+                    '<ul><li class="interaction-username"><span class="interaction-username">Count:</span> <span class="interaction-title">' + data.data.count + '</span></li></ul>' + 
+                    '<ul><li class="interaction-type"><span class="interaction-username">Seen by:</span> <span class="interaction-title">' + data.data.num_sensors + '</span></li></ul>' +
+                    '<ul><li class="interaction-type"><span class="interaction-username">Ports:</span> <span class="interaction-title">' + data.data.ports.join(", ") + '</span></li></ul>' +
+                    '<ul><li class="interaction-type"><span class="interaction-username">First seen:</span><br><span class="interaction-title">' + moment.utc(data.data.first_seen).fromNow() + '</span></li></ul>' +
+                    '<ul><li class="interaction-type"><span class="interaction-username">Last seen:</span><br><span class="interaction-title">' + moment.utc(data.data.last_seen).fromNow() + '</span></li></ul>';
+                attackerContainer.append(lastChild);
+            }
+            
+        });
+    getAttackerLocation(attackIP);
+}
+window.getAttackerStats = getAttackerStats;
+
+function getSensorStats(){
+    Boardroom.data = [];
+    var test = {};
+    var yesterdaysHours = [];
+    var today = moment.utc();
+    var yesterday = moment.utc().subtract(1, 'days');
+
+    $('#ticker-sensor').text(today.year());
+
+    var currentUTCHours = moment.utc().hours();
+
+    for(var h = 0; h < 24; h++){
+        test[h] = 0;
+    }
+    for(var yh = currentUTCHours + 1; yh < 24; yh++){
+        yesterdaysHours.push(yh);
+    }
+
+    var getYesterday = $.ajax({
+        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/?date=" + yesterday.format("YYYYMMDD")//"https://mhn.h-i-r.net/seckcapi" + "/stats/",
+      })
+        .done(function( data ) {
+            _.forEach(data, function(set){
+                _.forEach(set.hourly,function(value, key){
+                    if(yesterdaysHours.indexOf(parseInt(key, 10)) > -1){
+                        test[key] += value;
+                    }
+                });
+            });
+            _.forEach(test, function(count, key){
+                if(yesterdaysHours.indexOf(parseInt(key, 10)) > -1){
+                    year = yesterday.format("YYYY");
+                    month = yesterday.format("MM");
+                    day = yesterday.format("DD");
+
+                    Boardroom.data.push({
+                        year: year,
+                        month: month,
+                        day: day,
+                        hour: key,
+                        date: moment.utc([yesterday.year(), yesterday.month(), yesterday.date(), parseInt(key, 10)]),
+                        events: count
+                    });
+                }
+            });
+        });
+
+    var getToday = $.ajax({
+        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/?date=" + today.format("YYYYMMDD")//"https://mhn.h-i-r.net/seckcapi" + "/stats/",
+      })
+        .done(function( data ) {
+            _.forEach(data, function(set){
+                _.forEach(set.hourly,function(value, key){
+                    if(parseInt(key, 10) <= currentUTCHours){
+                        test[key] += value;
+                    }
+                });
+            });
+            _.forEach(test, function(count, key){
+                if(parseInt(key, 10) <= currentUTCHours){
+                    year = today.format("YYYY");
+                    month = today.format("MM");
+                    day = today.format("DD");
+
+                    Boardroom.data.push({
+                        year: year,
+                        month: month,
+                        day: day,
+                        hour: key,
+                        date: moment.utc([today.year(), today.month(), today.date(), parseInt(key, 10)]),
+                        events: count
+                    });
+                }
+            });  
+        });
+
+        $.when(getYesterday, getToday).then(function(){
+            Boardroom.data = _.sortBy(Boardroom.data,function(datum){
+                return datum.date.valueOf();
+            });
+            stockchart = new StockChart("stock-chart", {data: Boardroom.data, ticks: 4});
+        })
+}
+
+var attackmarker = null;
+function getAttackerLocation(attackIP){
+    if(attackmarker !== null){
+        attackerMap.removeLayer(attackmarker);
+    }
+    
+    $.ajax({
+        url: "https://mhn.h-i-r.net/seckcapi" + "/geocode/" + attackIP//"https://mhn.h-i-r.net/seckcapi" + "/geocode/" + attackIP,
+      })
+        .done(function( data ) {
+            var lat = data.location.latitude ? data.location.latitude : "0",
+                lon = data.location.longitude ? data.location.longitude : "0";
+            attackerMap.setView([lat, lon], 9);
+            attackmarker = L.marker([lat, lon]).addTo(attackerMap);
+        });
+}
+
+function getActivity(){
+    return $.ajax({
+        url: "https://mhn.h-i-r.net/api/intel_feed/?hours_ago=24",
+      })
+        .done(function( data ) {
+            console.log(data);
+        });
+}
+
 Boardroom.show = function(cb){
-    startDate = new Date();
+    startDate = moment();//new Date();
     lastTime = Date.now();
 
     $("#boardroom").css({"visibility": "visible"});
@@ -196,27 +404,48 @@ Boardroom.show = function(cb){
         width: "1900px"
     }, 2000);
 
-    setTimeout(function(){
-        for(var i = 0; i< 2; i++){
-            for(var j = 0; j< 3; j++){
-                globe.addSatellite(50 * i - 30 + 15 * Math.random(), 120 * j - 120 + 30 * i, 1.3 + Math.random()/10);
-            }
-        }
-    }, 5000);
+    // addSatellite(lat, lon, altitude, opts, texture, animator)
+    // var opts = {
+    //     numWaves: 8,
+    //     waveColor: "#FFF",#725798
+    //     coreColor: "#FF0000",
+    //     shieldColor: "#FFF",
+    //     size: 1
+    // }
+    
+    if(authenticatedUser === true){
+        $.when(getSensors(),getTopAttackers(), getSensorStats()).then(function(){
+            //console.log("all done");
+        });
+        //getTopAttackers
+        setInterval(getTopAttackers, 1000 * 60);
+        setInterval(getSensorStats, 1000 * 60);
+    }
 
     setInterval(function(){
         satbar.setZone(Math.floor(Math.random()*4-1));
     }, 7000);
 
     setTimeout(function(){
-        globe.addMarker(49.25, -123.1, "Vancouver");
-        globe.addMarker(35.68, 129.69, "Tokyo", true);
+        globe.addMarker(36.114647, -115.172813, "LV");
+        globe.addMarker(39.114, -94.627, "KC");
+        globe.addMarker(41.600545, -93.609106, "DSM");
+        globe.addMarker(38.907192, -77.036871, "DC");
+        attackerMap = L.map('attacker-map',{zoomControl:false}).setView([0, 0], 1);
+        L.tileLayer('https://api.mapbox.com/styles/v1/wintelseckc/cj7c70wocaonm2spgkpuubn9y/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoid2ludGVsc2Vja2MiLCJhIjoiY2o3OWNkcWUyMDBjdzJ3cnNydGl0Nml6NCJ9.iLffndfFTZeV3I5VVF3-kA', {
+            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a>, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, © <a href="http://mapbox.com">Mapbox</a>',
+            maxZoom: 18,
+            // id: 'Dark-encom',
+            // accessToken: 'pk.eyJ1Ijoid2ludGVsc2Vja2MiLCJhIjoiY2o3OWNkcWUyMDBjdzJ3cnNydGl0Nml6NCJ9.iLffndfFTZeV3I5VVF3-kA'
+        }).addTo(attackerMap);
     }, 2000);
 
-    globe = new EncomGlobe(600, 600, {
+    globe = new EncomGlobe(800, 800, {
         tiles: grid.tiles,
         pinColor: "#8FD8D8",
-        viewAngle: .1
+        viewAngle: .1,
+        baseColor: "#000000",
+        pointsPerDegree: 4
     });
     $("#globe").append(globe.domElement);
 
@@ -228,12 +457,10 @@ Boardroom.show = function(cb){
 
         // give anything else on the other side a second before starting
         setTimeout(function(){
-            box = new Box({containerId: "cube"});
             satbar = new SatBar("satbar");
             timertrees = new TimerTrees("timer-trees");
-            stockchart = new StockChart("stock-chart", {data: Boardroom.data});
+            //stockchart = new StockChart("stock-chart", {data: Boardroom.data});
             stockchartsmall = new StockChartSmall("stock-chart-small", {data: Boardroom.data});
-            swirls = new Swirls("swirls");
             logo = new Logo("logo", streamType.toUpperCase());
             boardroomActive = true;
         }, 1000);
@@ -256,6 +483,7 @@ Boardroom.hide = function(){
     swirls = null;
     logo = null;
 
+    LightTable.show();
 };
 
 Boardroom.animate = function(){
@@ -267,54 +495,104 @@ Boardroom.animate = function(){
         satbar.tick();
         $("#clock").text(getTime());
         simpleclock.tick();
-        box.tick();
-        stockchart.tick();
-        swirls.tick();
+        if(stockchart !== undefined){
+            stockchart.tick();
+        }
         updateSliders(animateTime);
     }
 
 };
 
 Boardroom.message = function(message){
-
-    if(message.stream != streamType || !globe){
-        return;
-    }
-
-    if(message.latlon){
-        var latlon = message.latlon;
-        globe.addPin(latlon.lat, latlon.lon, message.location);
-    }
     
-    if(message.picSmall || message.picLarge){
-        addPic(message);
-    }
-
-    if(message.type && swirls){
-        swirls.hit(message.type);
-    }
-
-    changeBlinkies();
- 
-    if(interactionContainer && interactionContainer[0].lastChild){
-        var lastChild = interactionContainer[0].lastChild;
-        lastChild.innerHTML = '<li class="interaction-username">' + message.username + '</li>' + 
-            '<li class="interaction-title">' + message.title + '</li>' + 
-            '<li class="interaction-type">' + (message.type ? message.type : "") + '</li>' + 
-            '<li class="interaction-size">' + (message.size ? message.size : "") + '</li>' + 
-            '<li class="interaction-popularity">' + (message.popularity ? message.popularity : "")+ '</li>';
-
-        if(message.popularity > 100){
-            lastChild.innerHTML = '<li class="interaction-popular">!</li>' + lastChild.innerHTML;
+        if(!globe){
+            return;
+        }
+    
+        if(message.latlon){
+            var latlon = message.latlon;
+            globe.addPin(latlon.lat, latlon.lon, message.location);
+        }
+        
+        if(message.picSmall || message.picLarge){
+            addPic(message);
+        }
+    
+        if(message.commands && swirls){
+            swirls.hit(message.commands.join(", "));
         }
 
-        interactionContainer[0].insertBefore(interactionContainer[0].lastChild, interactionContainer[0].firstChild);
-    }
+        message.title = message.peerIP || message.attackerIP || message.remote_host;
+        message.displayHostPort = message.hostPort || message.victimPort || "";
+        message.displayActivity = message.loggedin || message.connectionType || "";
+    
+        changeBlinkies();
+     
+        if(interactionContainer && interactionContainer[0].lastChild){
+            var lastChild = interactionContainer[0].lastChild;
+            lastChild.innerHTML = '<td class="interaction-username">' + (message.loggedin ? message.loggedin.join(", ") : message.displayActivity) + '</td>' + 
+                '<td class="interaction-title">' + message.title + '</td>' + 
+                '<td class="interaction-type">' + message.displayHostPort + '</td>' + 
+                '<td class="interaction-popularity">' + (message.startTime ? message.startTime : "")+ '</td>';
+    
+            interactionContainer[0].insertBefore(interactionContainer[0].lastChild, interactionContainer[0].firstChild);
+        }
 
-    createZipdot(message);
+        $.ajax({
+            url: "https://mhn.h-i-r.net/seckcapi" + "/geocode/" + (message.peerIP || message.attackerIP || message.remote_host),
+          })
+            .done(function( data ) {
+                message.ipinfo = data;
+                
+                message.latlon = {
+                    lat:data.location.latitude ? data.location.latitude : "0",
+                    lon:data.location.longitude ? data.location.longitude : "0"
+                }
+                globe.addPin(data.location.latitude, data.location.longitude, data.city ? data.city.names.en : "");
+                createZipdot(message)
+            });
+    
+    };
+// Boardroom.message = function(message){
+
+//     if(message.stream != streamType || !globe){
+//         return;
+//     }
+
+//     if(message.latlon){
+//         var latlon = message.latlon;
+//         globe.addPin(latlon.lat, latlon.lon, message.location);
+//     }
+    
+//     if(message.picSmall || message.picLarge){
+//         addPic(message);
+//     }
+
+//     if(message.type && swirls){
+//         swirls.hit(message.type);
+//     }
+
+//     changeBlinkies();
+ 
+//     if(interactionContainer && interactionContainer[0].lastChild){
+//         var lastChild = interactionContainer[0].lastChild;
+//         lastChild.innerHTML = '<li class="interaction-username">' + message.username + '</li>' + 
+//             '<li class="interaction-title">' + message.title + '</li>' + 
+//             '<li class="interaction-type">' + (message.type ? message.type : "") + '</li>' + 
+//             '<li class="interaction-size">' + (message.size ? message.size : "") + '</li>' + 
+//             '<li class="interaction-popularity">' + (message.popularity ? message.popularity : "")+ '</li>';
+
+//         if(message.popularity > 100){
+//             lastChild.innerHTML = '<li class="interaction-popular">!</li>' + lastChild.innerHTML;
+//         }
+
+//         interactionContainer[0].insertBefore(interactionContainer[0].lastChild, interactionContainer[0].firstChild);
+//     }
+
+//     createZipdot(message);
 
 
-};
+// };
 
 Boardroom.resize = function(){
     var ratio = $(window).width() / 1918;
@@ -393,7 +671,7 @@ function createZipdot(message){
 
     if(message.latlon){
         area = findArea(message.latlon.lat, message.latlon.lon);
-        $("#location-city-" + area).text(message.location);
+        $("#location-city-" + area).text(message.ipinfo.city ? message.ipinfo.city.names.en : "");
     }
 
     locationAreas[area].count = locationAreas[area].count + 1;
@@ -520,14 +798,15 @@ function findArea(lat, lng){
 
 function getTime(){
 
-    var elapsed = new Date() - startDate;
+    var now = moment.duration(moment().diff(startDate));
+    //var elapsed = startDate;
 
-    var mili = Math.floor((elapsed/10) % 100);
-    var seconds = Math.floor((elapsed / 1000) % 60); 
-    var minutes = Math.floor((elapsed / 60000) % 100); 
-    var hours = Math.floor((elapsed / 3600000) % 100); 
+    // var mili = Math.floor((elapsed/10) % 100);
+    var seconds = Math.floor(now.seconds());//Math.floor((elapsed / 1000) % 60); 
+    var minutes = Math.floor(now.minutes());//Math.floor((elapsed / 60000) % 100); 
+    var hours = Math.floor(now.hours());//Math.floor((elapsed / 3600000) % 100); 
 
-    return (hours < 10 ? "0":"") + hours + ":" + (minutes < 10 ? "0":"") + minutes + ":" + (seconds< 10? "0": "") + seconds + ":" + (mili < 10? "0" : "") + mili;
+    return (hours < 10 ? "0":"") + hours + ":" + (minutes < 10 ? "0":"") + minutes + ":" + (seconds< 10? "0": "") + seconds /*+ ":" + (mili < 10? "0" : "") + mili*/;
 
 }
 

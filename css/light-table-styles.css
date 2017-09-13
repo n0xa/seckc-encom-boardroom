@@ -354,9 +354,9 @@ ul {
     color: #000;
 }
 
-#lt-launch-github {
+/* #lt-launch-github {
     margin-top: 20px;
-}
+} */
 
 .selected-folder {
     background-color: #feb400;
@@ -475,7 +475,11 @@ ul {
 }
 
 
-@media (max-width: 1100px) { 
+@media (max-width: 1100px) {
+    
+    .header{
+        font-size: 6px;
+    }
 
     #lt-far-right-column {
         display: none;
@@ -734,10 +738,13 @@ ul {
         width: 92px;
     }
 
-
-    #lt-launch-github {
+    #lt-launch-mhn {
         margin-top: 60px;
     }
+
+    /* #lt-launch-github {
+        margin-top: 60px;
+    } */
 
     #lt-keyboard {
         margin-left: 60px;

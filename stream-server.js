@@ -11,8 +11,8 @@ var express = require('express'),
 // some helper services
 var LOCATIONLOOKUP = "http://localhost:8080/",
   IPLOOKUP = "http://localhost:8081/json/",
-  USERLOOKUP = "http://localhost:8082/users/",
-  REPOLOOKUP = "http://localhost:8082/repos/";
+  USERLOOKUP = "https://api.github.com/users/",
+  REPOLOOKUP = "https://api.github.com/repos/";
 
 // env vars
 var PORT = process.env.PORT || 8081,
@@ -208,7 +208,16 @@ githubStream.pipe(map(function(data, callback){
         outdata.username = data.actor.login;
         outdata.userurl = "http://github.com/" + data.actor.login + "/";
         
-        request.get(USERLOOKUP + data.actor.login, function(error, response, body){
+        request.get({url: USERLOOKUP + data.actor.login,
+            'auth': {
+                'user': 'user',
+                'pass': 'pass'
+            },
+            headers:{
+                "User-Agent": "demo github app"
+            }
+            }
+            , function(error, response, body){
             if(error){
                 console.log("error looking up user..." + error);
             }
@@ -227,7 +236,11 @@ githubStream.pipe(map(function(data, callback){
                 outdata.title = data.repo.name;
                 outdata.url = data.repo.url;
 
-                request.get(REPOLOOKUP + data.repo.name, function(error, response, body){
+                request.get({ url: REPOLOOKUP + data.repo.name, 
+                headers:{
+                    "User-Agent": "demo github app"
+                }
+                }, function(error, response, body){
                     if(error){
                         console.log("error looking up repo..." + error);
                     }
@@ -256,32 +269,32 @@ githubStream.pipe(map(function(data, callback){
 })).on("data", formatAndSendGithubData);
 
 
-wikipediaStream.pipe(map(function(data, callback){
-    var outdata = {
-        stream: "wikipedia",
-        location: null,
-        title: data.page,
-        type: data.language,
-        url: data.url,
-        size: parseInt(data.size, 10),
-        ip: data.ip,
-        username: data.user,
-        action: data.type
-    };
+// wikipediaStream.pipe(map(function(data, callback){
+//     var outdata = {
+//         stream: "wikipedia",
+//         location: null,
+//         title: data.page,
+//         type: data.language,
+//         url: data.url,
+//         size: parseInt(data.size, 10),
+//         ip: data.ip,
+//         username: data.user,
+//         action: data.type
+//     };
 
-    if(data.user){
-        outdata.picSmall = 'images/not_available_small.png';
-        outdata.picLarge = 'images/not_available_large.png';
-        outdata.userurl = "http://" + data.language + ".wikipedia.org/wiki/User:" + data.user;
-    }
+//     if(data.user){
+//         outdata.picSmall = 'images/not_available_small.png';
+//         outdata.picLarge = 'images/not_available_large.png';
+//         outdata.userurl = "http://" + data.language + ".wikipedia.org/wiki/User:" + data.user;
+//     }
 
-    if(data.language && wikipediaLanguageMap[data.language]){
-        outdata.type = wikipediaLanguageMap[data.language];
-    }
+//     if(data.language && wikipediaLanguageMap[data.language]){
+//         outdata.type = wikipediaLanguageMap[data.language];
+//     }
 
-    callback(null, outdata);
+//     callback(null, outdata);
 
-})).on("data", formatAndSendWikipediaData);
+// })).on("data", formatAndSendWikipediaData);
 
 // startup everything
 http.createServer(app).listen(app.get('port'), function(){

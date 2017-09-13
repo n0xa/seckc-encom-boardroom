@@ -3,18 +3,27 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta property="og:image" content="https://www.robscanlon.com/encom-boardroom/images/screenshot.jpg" />
-        <meta property="og:description" content="A WebGL implementation of the Encom Boardroom scene in Tron: Legacy" />
-        <title>Tron: Legacy Encom Boardroom Visualization</title>
+        <meta property="og:image" content="https://mhn.h-i-r.net/dash/images/screenshot.jpeg" />
+        <meta property="og:description" content="A WebGL implementation of the Encom Boardroom scene in Tron: Legacy, a la SecKC MHN" />
+        <title>SecKC MHN Dashboard</title>
+        <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
+
         <link href='//fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
         <link href="css/global.css" rel="stylesheet" type="text/css" />
         <link href="css/light-table-styles.css" rel="stylesheet" type="text/css" />
         <link href="css/boardroom-styles.css" rel="stylesheet" type="text/css" />
-        <link rel="canonical" href="https://www.robscanlon.com/encom-boardroom/" />
+        <link rel="canonical" href="http://seckc.org" />
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+        integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+        crossorigin=""/>
 
         <script src="js/globe-grid.js"></script>
         <script src="js/github-2013.js"></script>
-
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+        
+        <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+        integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+        crossorigin=""></script>
         <!-- ref:include boardroomEsPath -->
         <!-- endref -->
 
@@ -105,17 +114,23 @@
                     <div id="lt-globalization" class="content-container">
                         <div class="content">
                             <h2>
-                                BOARDROOM VISUALIZATION ... PLEASE SELECT DATA <span class="alt-1">.STREAM</span>
+                                SECKC MHN VISUALIZATION ... PLEASE SELECT DATA <span class="alt-1">.STREAM</span>
                                 <em>END. PROGRAM</em>
                             </h2>
 
 
-                            <div class="folder-container" id="lt-launch-github">
+                            <div class="folder-container" id="lt-launch-mhn">
+                                <div class="folder-label">
+                                    MHN Stream 
+                                </div>
+                                <div class="folder-big"></div>
+                            </div>
+                            <!-- <div class="folder-container" id="lt-launch-github">
                                 <div class="folder-label">
                                     Github Stream 
                                 </div>
                                 <div class="folder-big"></div>
-                            </div>
+                            </div> -->
                             <div id="lt-command-line">
                                 <div id="lt-command-line-header">
                                     Last Login: Wed Nov 26 11:26:49 on llvm992
@@ -127,7 +142,14 @@
 
                             </div>
 
-                            <div class="folder-container" id="lt-launch-test">
+                            <!-- <div class="folder-container" id="lt-launch-github">
+                                <div class="folder-label">
+                                    Github Stream 
+                                </div>
+                                <div class="folder-small"></div>
+                            </div> -->
+
+                            <!-- <div class="folder-container" id="lt-launch-test">
                                 <div class="folder-label">
                                     Test Stream
                                 </div>
@@ -146,14 +168,14 @@
                                     Bitcoin
                                 </div>
                                 <div class="folder-small"></div>
-                            </div>
+                            </div> -->
 
-                            <div class="folder-container" id="lt-launch-unknown">
+                            <!-- <div class="folder-container" id="lt-launch-unknown">
                                 <div id="lt-folder-2" class="folder-label">
                                     Unknown
                                 </div>
                                 <div class="folder-small"></div>
-                            </div>
+                            </div> -->
 
                         </div>
                     </div>
@@ -250,7 +272,7 @@
                 </div>
 
                 <div id="lt-far-right-column">
-                    <div id="lt-encom-logo">ENCOM</div>
+                    <div id="lt-encom-logo">SecKC</div>
                     <img id="lt-thumbprint" src="images/thumbprint.png" />
                 </div>
 
@@ -265,9 +287,9 @@
             <div id="globalization">
                 <div class="header" id="globalization-header">GLOBALIZATION</div>
                 <canvas id="satbar" width="180px" height="36px"></canvas>
-                <div class="location-slider" id="location-slider-northamerica"">
+                <div class="location-slider" id="location-slider-northamerica">
                     <div class="location-name">
-                        <span class="location-area" id="location-area-northamerica">No America</span>
+                        <span class="location-area" id="location-area-northamerica">N America</span>
                         <span class="location-city" id="location-city-northamerica"></span>
                     </div>
                     <div class="location-line"></div>
@@ -277,7 +299,7 @@
                 </div>
                 <div class="location-slider" id="location-slider-southamerica" >
                     <div class="location-name">
-                        <span class="location-area" id="location-area-southamerica">So America</span>
+                        <span class="location-area" id="location-area-southamerica">S America</span>
                         <span class="location-city" id="location-city-southamerica"></span>
                     </div>
                     <div class="location-line"></div>
@@ -364,11 +386,8 @@
 
             <div id="globe"></div>
             <div id="globe-footer">
-                <a href="?" title="back"><img id="keyboard-image" src="images/keyboard.png" /></a>
+                <a id="gotoLT" href="?redirect=false" title="back"><img id="keyboard-image" src="images/keyboard.png" /></a>
                 <div class="footer-bar"></div>
-                <a href="#" id="info-link" title="Info"><img id="info-image" src="images/info.png" /></a>
-                <a href="http://twitter.com/arscan" title="@arscan" target="_blank"><img id="twitter" src="images/twitter.png" /></a>
-                <a href="http://github.com/arscan/encom-boardroom" title="Fork me on Github" target="_blank"><img id="github-image" src="images/GitHub-Mark-Light-32px.png" /></a>
                 <a href="#" id="fullscreen-link" title="Go Fullscreen"><img id="fullscreen-image" src="images/fullscreen.png" /></a>
             </div>
 
@@ -378,21 +397,10 @@
                 </div>
                 <div id="user-interaction-container">
                     <div id="interaction"> 
-                        <h3>Some fancy Interaction</h3>
-                        <div>
-
-                        </div>
+                        <h3>why are you looking here</h3>
+                        <table class="stream-table"><tbody></tbody></table>
                     </div>
                     <div id="interaction-overlay"></div>
-                    <div id="cube" width ="290" height="225"> 
-                        <div id="cube-labels">
-                            <div id="cube-label-1">Yeah</div>
-                            <div id="cube-label-2">Why</div>
-                            <div id="cube-label-3">Not</div>
-                        </div>
-                    </div>
-                    <div id="swirls"> 
-                    </div>
                 </div>
             </div>
             <div id="growth">
@@ -402,14 +410,14 @@
                 <div id="growth-container">
                     <div id = "ticker">
                         <div id="ticker-text"></div>
-                        <div id="ticker-subtext">[INC]</div>
+                        <div id="ticker-subtext">[ORG]</div>
                         <div id="ticker-lines">
                             <div class="ticker-line" id="ticker-line-1">.</div>
                             <div class="ticker-line" id="ticker-line-2">.</div>
                         </div>
                         <div id="ticker-value">
                         </div>
-                        <div id="ticker-ytd">
+                        <div id="ticker-sensor">
                             2013 Events
                         </div>
                         <canvas id="stock-chart-small" width="72px" height="40px"></canvas>
@@ -528,15 +536,12 @@
 
             <div id="media">
                 <div class="header" id="media-header">
-                    USER SNAPSHOTS
+                    MHN STATS :: TOP ATTACKERS :: LAST 24 HOURS
                 </div>
                 <div id="media-container">
                     <div id="media-top" class="media-box">
-                        <div class="user-pic larger"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
+                        <h3>Login...</h3>
+                        <table class="stream-table"><tbody></tbody></table>
                     </div>
                     <div id="media-top-blinkies" class="media-blinkies">
                         <h3>Some kind of title</h3>
@@ -605,11 +610,9 @@
                         <span>say</span>
                     </div>
                     <div id="media-bottom" class="media-box">
-                        <div class="user-pic larger"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
-                        <div class="user-pic"><span></span></div>
+                        <h3 class="attack-map-message">Select attacker...</h3>
+                        <div id="attacker-data"></div>
+                        <div id="attacker-map" style="height:100%;"></div>
                     </div>
                     <div id="media-bottom-blinkies" class="media-blinkies">
                         <h3>Some kind of title</h3>
@@ -670,10 +673,9 @@
                         <div class="blinky white"></div>
                     </div>
                     <div id="media-bottom-info" class="media-info">
-                        <span>all this bottom info</span>
-                        <span>something else interesting</span>
-                        <span>why?</span>
                         <span>rob scanlon made this</span>
+                        <span>thanks rob</span>
+                        <span>seriously</span>
                     </div>
                 </div>
             </div>
@@ -690,14 +692,14 @@
                 <div id="timerbar">
                     <div class="section-timerbar">
                         <div class="buffer-timerbar">
-                            <small>San Francisco</small>
-                            <span id="san-francisco-time">12:32:91</span>
+                            <small>Las Vegas</small>
+                            <span id="las-vegas-time">12:32:91</span>
                         </div>
                     </div>
                     <div class="section-timerbar">
                         <div class="buffer-timerbar">
-                            <small>New York</small>
-                            <span id="new-york-time">12:32:91</span>
+                            <small>Kansas City</small>
+                            <span id="kansas-city-time">12:32:91</span>
                         </div>
                     </div>
                     <div class="section-timerbar">

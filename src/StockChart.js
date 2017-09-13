@@ -1,10 +1,12 @@
 var Utils = require("./Utils");
+var moment = require("moment");
+_ = require("lodash/lodash.min.js");
 
 var StockChart = function(containerId, opts){
 
     var defaults = {
         ticks: 7,
-        holdTime: 3000,
+        holdTime: 10000,
         swipeTime: 800,
         data: []
     }
@@ -46,7 +48,7 @@ var StockChart = function(containerId, opts){
                 year: d.getFullYear(),
                 month: d.getMonth() + 1,
                 day: d.getDate(),
-                events: ((40+(count%92)) + Math.floor(Math.random()*50))
+                events: 33
             });
         }
     }
@@ -56,7 +58,7 @@ var StockChart = function(containerId, opts){
     for (var i = 0; i< this.opts.data.length; i++){
 
         if(q >= 0 && q !== parseInt(i / 92, 10)){
-            this.addFrame(quarter + " 2013 Activity" + (testData ? " (PLACEHOLDER DATA)" : ""), frameData);
+            this.addFrame(moment().format("YYYYMMDD") + " Activity", frameData);
 
             this.frames[this.frames.length-1].id = "stock-chart-canvas" + q;
             this.frames[this.frames.length-1].div = document.createElement("div");
@@ -79,7 +81,7 @@ var StockChart = function(containerId, opts){
 
     }
 
-    this.addFrame(quarter + " 2013 Activity" + (testData ? " (PLACEHOLDER DATA)" : ""), frameData);
+    this.addFrame(moment().format("dddd, MMMM Do YYYY") + " Activity", frameData);
 
     this.frames[this.frames.length-1].id = "stock-chart-canvas" + q;
     this.frames[this.frames.length-1].div = document.createElement("div");
@@ -93,8 +95,8 @@ StockChart.prototype.addFrame = function(label, data) {
     // get bounds of the data
 
     var sorted = data.slice(0).sort();
-    var min = sorted[0] * .8;
-    var max = sorted[sorted.length-5];
+    var min = _.min(sorted);//sorted[0] * .8;
+    var max = _.max(sorted);//sorted[sorted.length -1];
     var increment = (max - min) / this.opts.ticks;
     var heightIncrement  = (this.height) / this.opts.ticks;
 
@@ -106,12 +108,12 @@ StockChart.prototype.addFrame = function(label, data) {
 
         addGrid(ctx, this.opts.ticks, this.width, this.height);
 
-        ctx.font = "5pt Inconsolata";
+        ctx.font = "8pt Inconsolata";
         ctx.fillStyle="#fff";
 
         for(var i = 0; i < this.opts.ticks; i++){
 
-            ctx.fillText(('' + (min + (this.opts.ticks - i -1)* increment)).substring(0,6), 0, heightIncrement*i+10);
+            ctx.fillText(('' + Math.floor((min + (this.opts.ticks - i -1)* increment)) ).substring(0,6), 0, heightIncrement*i+23);
             ctx.beginPath();
             ctx.lineWidth="1";
             ctx.strokeStyle="#666";
@@ -148,7 +150,7 @@ StockChart.prototype.addFrame = function(label, data) {
         }
 
         // draw the label
-        ctx.font = "7pt Inconsolata";
+        ctx.font = "10pt Inconsolata";
         var textWidth = ctx.measureText(label).width;
 
         ctx.textAlign = "left";
