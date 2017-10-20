@@ -156,13 +156,21 @@ function initAuth(){
 
 function getSensors(){
     return $.ajax({
-        url: "https://mhn.h-i-r.net/api/sensor/",
+        url: "https://mhn.h-i-r.net/seckcapi"+ "/sensors/locations",
       })
         .done(function( data ) {
             if(data.length && data.length > 0){
                 data.forEach(function(sensor){
-                    getSensorLocation(sensor);
-                })
+                    var lat = sensor.location.latitude ? sensor.location.latitude : "0",
+                    lon = sensor.location.longitude ? sensor.location.longitude : "0";
+                
+                    var opts = {
+                        coreColor: "#BF92FF",
+                        numWaves: 4
+                    }
+                    
+                    globe.addSatellite(lat, lon, 1.4 + Math.random()/10, opts/* opts, texture, animator*/);
+                    })
             }
         });
 }
@@ -187,7 +195,7 @@ function getSensorLocation(sensor){
 
 function getTopAttackers(){
     return $.ajax({
-        url: "https://mhn.h-i-r.net/api/top_attackers/?hours_ago=24",
+        url: "https://mhn.h-i-r.net/seckcapi/stats/attackers",
       })
         .done(function( data ) {
             //topattacksContainer
@@ -207,10 +215,11 @@ function getTopAttackers(){
                 }
             });
         });
-}//https://mhn.h-i-r.net/api/attacker_stats/104.192.3.34/
+}
+
 function getAttackerStats(attackIP){
     $.ajax({
-        url: "https://mhn.h-i-r.net/api/attacker_stats/" + attackIP + "/",
+        url: "https://mhn.h-i-r.net/seckcapi/stats/attacker/" + attackIP,
       })
         .done(function( data ) {
             //topattacksContainer
@@ -252,7 +261,7 @@ function getSensorStats(){
     }
 
     var getYesterday = $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/?date=" + yesterday.format("YYYYMMDD")//"https://mhn.h-i-r.net/seckcapi" + "/stats/",
+        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/attacks?date=" + yesterday.format("YYYYMMDD")
       })
         .done(function( data ) {
             _.forEach(data, function(set){
@@ -281,7 +290,7 @@ function getSensorStats(){
         });
 
     var getToday = $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/?date=" + today.format("YYYYMMDD")//"https://mhn.h-i-r.net/seckcapi" + "/stats/",
+        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/attacks?date=" + today.format("YYYYMMDD")
       })
         .done(function( data ) {
             _.forEach(data, function(set){
@@ -413,14 +422,14 @@ Boardroom.show = function(cb){
     //     size: 1
     // }
     
-    if(authenticatedUser === true){
+    //if(authenticatedUser === true){
         $.when(getSensors(),getTopAttackers(), getSensorStats()).then(function(){
             //console.log("all done");
         });
         //getTopAttackers
         setInterval(getTopAttackers, 1000 * 60);
         setInterval(getSensorStats, 1000 * 60);
-    }
+    //}
 
     setInterval(function(){
         satbar.setZone(Math.floor(Math.random()*4-1));
