@@ -1,6 +1,7 @@
 var $ = require("jquery"),
     Boardroom = require("./Boardroom.js"),
     PleaseRotate = require("pleaserotate.js"),
+    config = require("./config.js"),
     init = false;
 
 require("jquery-ui");
@@ -34,7 +35,7 @@ var listener = function (event) {
     }
 };
 
-var custIO = io("https://mhn.h-i-r.net/",{ 
+var custIO = io(config.API_BASE_URL,{ 
     transportOptions: {
         polling: {
         extraHeaders: {
@@ -45,9 +46,19 @@ var custIO = io("https://mhn.h-i-r.net/",{
 });
 
 custIO.on('connect', function(socket) {
-    console.log('connected');
+    console.log('WebSocket connected to:', config.API_BASE_URL);
 });
+
+custIO.on('disconnect', function(reason) {
+    console.log('WebSocket disconnected:', reason);
+});
+
+custIO.on('connect_error', function(error) {
+    console.error('WebSocket connection error:', error);
+});
+
 custIO.on('hpfeedevent', function(data) {
+    console.log('Received hpfeedevent:', data);
     listener(data);
 });
 
