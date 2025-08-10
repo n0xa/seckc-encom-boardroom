@@ -9,7 +9,8 @@ var $ = require("jquery"),
     StockChart = require("./StockChart.js"),
     StockChartSmall = require("./StockChartSmall.js"),
     Logo = require("./Logo.js"),
-    _ = require("lodash/lodash.min.js")
+    _ = require("lodash"),
+    config = require("./config.js"),
     attackerMap = null;
 
 moment.tz = require("moment-timezone");
@@ -146,7 +147,7 @@ Boardroom.init = function(_streamType, data){
 
 function initAuth(){
     $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/auth/me",
+        url: config.API_BASE_URL + "auth/me",
       })
         .done(function( data ) {
             authenticatedUser = data.active ? data.active : false;
@@ -156,7 +157,7 @@ function initAuth(){
 
 function getSensors(){
     return $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi"+ "/sensors/locations",
+        url: config.API_BASE_URL + "sensors/locations",
       })
         .done(function( data ) {
             if(data.length && data.length > 0){
@@ -177,7 +178,7 @@ function getSensors(){
 
 function getSensorLocation(sensor){
     $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi"+ "/geocode/" + sensor.ip//"https://mhn.h-i-r.net/seckcapi" + "/geocode/" + sensor.ip,
+        url: config.API_BASE_URL + "geocode/" + sensor.ip,
       })
         .done(function( data ) {
             
@@ -195,7 +196,7 @@ function getSensorLocation(sensor){
 
 function getTopAttackers(){
     return $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi/stats/attackers",
+        url: config.API_BASE_URL + "stats/attackers",
       })
         .done(function( data ) {
             //topattacksContainer
@@ -219,7 +220,7 @@ function getTopAttackers(){
 
 function getAttackerStats(attackIP){
     $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi/stats/attacker/" + attackIP,
+        url: config.API_BASE_URL + "stats/attacker/" + attackIP,
       })
         .done(function( data ) {
             //topattacksContainer
@@ -261,7 +262,7 @@ function getSensorStats(){
     }
 
     var getYesterday = $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/attacks?date=" + yesterday.format("YYYYMMDD")
+        url: config.API_BASE_URL + "stats/attacks?date=" + yesterday.format("YYYYMMDD")
       })
         .done(function( data ) {
             _.forEach(data, function(set){
@@ -290,7 +291,7 @@ function getSensorStats(){
         });
 
     var getToday = $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/stats/attacks?date=" + today.format("YYYYMMDD")
+        url: config.API_BASE_URL + "stats/attacks?date=" + today.format("YYYYMMDD")
       })
         .done(function( data ) {
             _.forEach(data, function(set){
@@ -333,7 +334,7 @@ function getAttackerLocation(attackIP){
     }
     
     $.ajax({
-        url: "https://mhn.h-i-r.net/seckcapi" + "/geocode/" + attackIP//"https://mhn.h-i-r.net/seckcapi" + "/geocode/" + attackIP,
+        url: config.API_BASE_URL + "geocode/" + attackIP,
       })
         .done(function( data ) {
             var lat = data.location.latitude ? data.location.latitude : "0",
@@ -345,7 +346,7 @@ function getAttackerLocation(attackIP){
 
 function getActivity(){
     return $.ajax({
-        url: "https://mhn.h-i-r.net/api/intel_feed/?hours_ago=24",
+        url: config.API_BASE_URL + "intel_feed/?hours_ago=24",
       })
         .done(function( data ) {
             console.log(data);
@@ -548,7 +549,7 @@ Boardroom.message = function(message){
         }
 
         $.ajax({
-            url: "https://mhn.h-i-r.net/seckcapi" + "/geocode/" + (message.peerIP || message.attackerIP || message.remote_host),
+            url: config.API_BASE_URL + "geocode/" + (message.peerIP || message.attackerIP || message.remote_host),
           })
             .done(function( data ) {
                 message.ipinfo = data;

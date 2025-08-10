@@ -1,6 +1,7 @@
 var $ = require("jquery"),
     Boardroom = require("./Boardroom.js"),
     PleaseRotate = require("pleaserotate.js"),
+    config = require("./config.js"),
     init = false;
 
 require("jquery-ui");
@@ -34,22 +35,81 @@ var listener = function (event) {
     }
 };
 
-var custIO = io("https://mhn.h-i-r.net/",{ 
-    transportOptions: {
-        polling: {
-        extraHeaders: {
-            'Accept-Language': document.cookie
-        }
-        }
-    }
-});
+// Data delivery system - supports both WebSocket and REST polling
+var lastEventTimestamp = 0;
+var pollingTimer = null;
+var custIO = null;
 
-custIO.on('connect', function(socket) {
-    console.log('connected');
-});
-custIO.on('hpfeedevent', function(data) {
-    listener(data);
-});
+function startRestPolling() {
+    console.log('Starting REST API polling every', config.POLLING_INTERVAL, 'ms');
+    
+    function pollForEvents() {
+        var url = config.API_BASE_URL + 'feeds/events/recent?since=' + lastEventTimestamp;
+        
+        $.ajax({
+            url: url,
+            method: 'GET',
+            timeout: 5000,
+            success: function(response) {
+                if (response.events && response.events.length > 0) {
+                    console.log('Received', response.events.length, 'new events via REST API');
+                    
+                    response.events.forEach(function(eventData) {
+                        listener(eventData.event);
+                        lastEventTimestamp = Math.max(lastEventTimestamp, eventData.timestamp);
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('REST polling error:', error);
+            }
+        });
+    }
+    
+    // Initial poll
+    pollForEvents();
+    
+    // Set up regular polling
+    pollingTimer = setInterval(pollForEvents, config.POLLING_INTERVAL);
+}
+
+function startWebSocket() {
+    console.log('Starting WebSocket connection to:', config.API_BASE_URL);
+    
+    custIO = io(config.API_BASE_URL, { 
+        transportOptions: {
+            polling: {
+                extraHeaders: {
+                    'Accept-Language': document.cookie
+                }
+            }
+        }
+    });
+
+    custIO.on('connect', function(socket) {
+        console.log('WebSocket connected to:', config.API_BASE_URL);
+    });
+
+    custIO.on('disconnect', function(reason) {
+        console.log('WebSocket disconnected:', reason);
+    });
+
+    custIO.on('connect_error', function(error) {
+        console.error('WebSocket connection error:', error);
+    });
+
+    custIO.on('hpfeedevent', function(data) {
+        console.log('Received hpfeedevent via WebSocket:', data);
+        listener(data);
+    });
+}
+
+// Initialize data delivery based on configuration
+if (config.DELIVERY_METHOD === "polling") {
+    startRestPolling();
+} else {
+    startWebSocket();
+}
 
 
 var onSwitch = function(view){
