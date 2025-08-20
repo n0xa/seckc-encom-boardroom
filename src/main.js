@@ -39,9 +39,18 @@ var listener = function (event) {
 var lastEventTimestamp = 0;
 var pollingTimer = null;
 var custIO = null;
+var currentPollingInterval = 1000;
+
+function resetPollingInterval() {
+    currentPollingInterval = 1000;
+}
+
+function doublePollingInterval() {
+    currentPollingInterval = Math.min(currentPollingInterval * 2, config.MAX_POLLING_INTERVAL);
+}
 
 function startRestPolling() {
-    console.log('Starting REST API polling every', config.POLLING_INTERVAL, 'ms');
+    console.log('Starting REST API polling with exponential backoff (max:', config.MAX_POLLING_INTERVAL/1000, 'seconds)');
     
     function pollForEvents() {
         var url = config.API_BASE_URL + 'feeds/events/recent?since=' + lastEventTimestamp;
@@ -58,19 +67,24 @@ function startRestPolling() {
                         listener(eventData.event);
                         lastEventTimestamp = Math.max(lastEventTimestamp, eventData.timestamp);
                     });
+                    
+                    resetPollingInterval();
+                } else {
+                    doublePollingInterval();
                 }
+                
+                console.log('Next poll in', currentPollingInterval/1000, 'seconds');
+                pollingTimer = setTimeout(pollForEvents, currentPollingInterval);
             },
             error: function(xhr, status, error) {
                 console.error('REST polling error:', error);
+                doublePollingInterval();
+                pollingTimer = setTimeout(pollForEvents, currentPollingInterval);
             }
         });
     }
     
-    // Initial poll
     pollForEvents();
-    
-    // Set up regular polling
-    pollingTimer = setInterval(pollForEvents, config.POLLING_INTERVAL);
 }
 
 function startWebSocket() {

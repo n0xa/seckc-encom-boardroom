@@ -9,6 +9,6 @@ module.exports = {
     // Use "polling" if WebSocket compatibility issues occur
     DELIVERY_METHOD: "polling",
     
-    // Polling interval in milliseconds (only used when DELIVERY_METHOD is "polling")
-    POLLING_INTERVAL: 2000
+    // Maximum polling interval in milliseconds for exponential backoff
+    MAX_POLLING_INTERVAL: 64000
 };
