@@ -1,38 +1,31 @@
 {
   "name": "encom-boardroom",
-  "version": "0.10.7",
+  "version": "0.10.8",
   "description": "encom-boardroom",
   "main": "index.html",
   "dependencies": {
     "encom-globe": "*",
-    "event-source": "~0.1.0",
-    "express": "~4.3.0",
-    "github-timeline-stream": "*",
-    "jquery": "~2.1.0",
-    "jquery-ui": "~1.10.5",
+    "jquery": "^3.7.1",
+    "jquery-ui": "^1.13.3",
     "lodash": "^4.17.21",
-    "map-stream": "~0.1.0",
-    "moment": "^2.6.0",
-    "moment-timezone": "0.0.6",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.46",
     "pleaserotate.js": "*",
     "pusher.color": "~0.2.4",
-    "request": "~2.34.0",
-    "serve-favicon": "~2.0.0",
-    "three": "~0.66.2",
-    "wikipedia-stream": "*"
+    "three": "~0.66.2"
   },
   "devDependencies": {
-    "browserify": "~3.44.2",
-    "grunt": "^0.4.5",
-    "grunt-browserify": "~2.0.8",
-    "grunt-contrib-clean": "^1.1.0",
-    "grunt-contrib-copy": "^0.5.0",
-    "grunt-contrib-uglify": "~0.4.0",
-    "grunt-contrib-watch": "~0.5.3"
+    "browserify": "^17.0.0",
+    "grunt": "^1.6.1",
+    "grunt-browserify": "^5.3.0",
+    "grunt-contrib-clean": "^2.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-uglify": "^5.2.2",
+    "grunt-contrib-watch": "^1.1.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodejs stream-server.js"
+    "build": "grunt release"
   },
   "repository": {
     "type": "git",

@@ -1,10 +1,14 @@
-var $ = require("jquery"),
-    Boardroom = require("./Boardroom.js"),
+var $ = require("jquery");
+window.jQuery = $;
+window.$ = $;
+
+var Boardroom = require("./Boardroom.js"),
     PleaseRotate = require("pleaserotate.js"),
     config = require("./config.js"),
     init = false;
 
 require("jquery-ui");
+require("jquery-ui/ui/effect");
 
 $.fn.center = function (scale) {
 
